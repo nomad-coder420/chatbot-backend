@@ -1,0 +1,8 @@
+.pyc
+.env
+venv
+__pycache__/
+dataset/*
+.vscode/*
+alembic/versions/*
+.mypy_cache
