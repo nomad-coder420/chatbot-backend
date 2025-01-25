@@ -3,6 +3,8 @@ from json import JSONEncoder
 import requests
 
 from chatbot.core.constants import (
+    GOOGLE_PUBLIC_KEYS_URL,
+    GOOGLE_PUBLIC_KEYS_VAR,
     GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
@@ -30,3 +32,20 @@ class GoogleClient:
 
         print("Failed to get token data", response.status_code, response.text)
         raise Exception("Failed to get token data")
+
+    def get_public_keys(self):
+        global GOOGLE_PUBLIC_KEYS_VAR
+
+        if GOOGLE_PUBLIC_KEYS_VAR:
+            return GOOGLE_PUBLIC_KEYS_VAR
+
+        response = requests.get(GOOGLE_PUBLIC_KEYS_URL)
+
+        if response.status_code == 200:
+            public_keys = response.json()
+
+            GOOGLE_PUBLIC_KEYS_VAR = public_keys
+            return public_keys
+
+        print("Failed to get public keys", response.status_code, response.text)
+        raise Exception("Failed to get public keys")
