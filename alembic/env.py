@@ -7,6 +7,7 @@ from chatbot.core.models import Base
 
 import chatbot.components.user.models
 import chatbot.components.auth.models
+import chatbot.components.chat.models
 
 config = context.config
 target_metadata = Base.metadata
