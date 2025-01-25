@@ -24,8 +24,8 @@ class AskQueryRequestSchema(BaseModel):
 
 
 class AskQueryResponseSchema(BaseModel):
-    query_id: str
-    response: str
+    query_id: UUID
+    response_id: UUID
     status: QueryResponseStatus
 
 
