@@ -6,3 +6,4 @@ dataset/*
 .vscode/*
 alembic/versions/*
 .mypy_cache
+.gitconfig
