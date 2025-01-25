@@ -18,3 +18,5 @@ class User(BaseModel):
     authentication: Mapped["Authentication"] = relationship(
         "Authentication", back_populates="user", uselist=False
     )
+
+    queries = relationship("UserQuery", back_populates="user")
