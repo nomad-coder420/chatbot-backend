@@ -7,7 +7,7 @@ from chatbot.api.v1.auth.request_response import (
 )
 from chatbot.api.v1.request_response import ErrorSchema
 from chatbot.core.utils import get_db
-from chatbot.flows.google_login_flow import GoogleLoginFlow
+from chatbot.flows.google_login import GoogleLoginFlow
 
 api_router = APIRouter()
 

@@ -1,9 +1,15 @@
+import base64
 import jwt
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from datetime import datetime, timedelta, timezone
-
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey, RSAPublicNumbers
+from cryptography.hazmat.backends import default_backend
 
 from chatbot.core.constants import JWT_TOKEN_SECRET, JWT_TOKEN_ALGORITHM
+
+
+def decode_base64url(base64url_str):
+    padding = "=" * (4 - len(base64url_str) % 4)
+    return base64.urlsafe_b64decode(base64url_str + padding)
 
 
 class JwtClient:
@@ -63,3 +69,27 @@ class JwtClient:
         expiry_datetime = datetime.fromtimestamp(expiry, tz=timezone.utc)
 
         return expiry_datetime < datetime.now(timezone.utc)
+
+    def get_rsa_public_key(
+        self, jwt_header: dict, public_keys: list[dict]
+    ) -> RSAPublicKey:
+        jwt_public_key = None
+
+        for key in public_keys:
+            if key.get("kid") == jwt_header.get("kid"):
+                jwt_public_key = key
+
+        if not jwt_public_key:
+            raise Exception("Public key not found for 'kid' in JWT header.")
+
+        n_bytes = decode_base64url(jwt_public_key["n"])
+        e_bytes = decode_base64url(jwt_public_key["e"])
+
+        n = int.from_bytes(n_bytes, byteorder="big")
+        e = int.from_bytes(e_bytes, byteorder="big")
+
+        public_numbers = RSAPublicNumbers(n=n, e=e)
+
+        rsa_public_key = public_numbers.public_key(default_backend())
+
+        return rsa_public_key

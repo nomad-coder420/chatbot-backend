@@ -1,6 +1,4 @@
 from sqlalchemy.orm import Session
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
 
 
 from chatbot.clients.google import GoogleClient
@@ -8,7 +6,6 @@ from chatbot.clients.jwt import JwtClient
 from chatbot.components.auth.controller import AuthController
 from chatbot.components.user.crud import UserCrud
 from chatbot.core.constants import GOOGLE_CLIENT_ID
-from chatbot.core.utils import decode_base64url
 
 
 class GoogleLoginFlow:
@@ -16,36 +13,21 @@ class GoogleLoginFlow:
         self.db = db
 
         self.jwt_client = JwtClient()
+        self.google_client = GoogleClient()
         self.auth_controller = AuthController(self.db)
         self.user_controller = UserCrud(self.db)
 
     def execute_flow(self, code: str):
         try:
-            token_data = GoogleClient().get_token_data(code)
+            token_data = self.google_client.get_token_data(code)
 
             id_token = token_data.get("id_token")
             jwt_header = self.jwt_client.get_unverified_header(id_token)
 
-            google_public_keys = GoogleClient().get_public_keys()
+            google_public_keys = self.google_client.get_public_keys()
             public_keys = google_public_keys.get("keys") or []
 
-            jwt_public_key = None
-            for key in public_keys:
-                if key.get("kid") == jwt_header.get("kid"):
-                    jwt_public_key = key
-
-            if not jwt_public_key:
-                raise Exception("Public key not found for 'kid' in JWT header.")
-
-            n_bytes = decode_base64url(jwt_public_key["n"])
-            e_bytes = decode_base64url(jwt_public_key["e"])
-
-            n = int.from_bytes(n_bytes, byteorder="big")
-            e = int.from_bytes(e_bytes, byteorder="big")
-
-            public_numbers = rsa.RSAPublicNumbers(n=n, e=e)
-
-            rsa_public_key = public_numbers.public_key(default_backend())
+            rsa_public_key = self.jwt_client.get_rsa_public_key(jwt_header, public_keys)
 
             user_info = self.jwt_client.decode_token(
                 id_token, rsa_public_key, ["RS256"], GOOGLE_CLIENT_ID
