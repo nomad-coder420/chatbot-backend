@@ -71,6 +71,8 @@ class ChatCrud:
 
             response = response_dict.get(query.id)
             if response:
+                response_text = response.response
+                response_id = response.response_id
                 status = response.response_status
 
             chat_history.append(

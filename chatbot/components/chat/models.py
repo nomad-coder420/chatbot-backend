@@ -25,7 +25,7 @@ class UserQuery(BaseModel):
         UUID(as_uuid=True), default=uuid4, primary_key=True, index=True, nullable=False
     )
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("user_user.user_id"), nullable=False, index=True
+        Integer, ForeignKey("user_user.id"), nullable=False, index=True
     )
     query: Mapped[str] = mapped_column(String, nullable=False)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -66,4 +66,4 @@ class QueryResponse(BaseModel):
         JSON, server_default=func.json("{}"), nullable=False
     )
 
-    query = relationship("ChatQuery", back_populates="responses")
+    query = relationship("UserQuery", back_populates="responses")
