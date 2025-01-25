@@ -12,7 +12,7 @@ class User(BaseModel):
     user_id: Mapped[UUIDType] = mapped_column(
         UUID(as_uuid=True), default=uuid4, primary_key=True, index=True, nullable=False
     )
-    name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
     authentication: Mapped["Authentication"] = relationship(

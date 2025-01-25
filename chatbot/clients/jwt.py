@@ -11,7 +11,7 @@ class JwtClient:
         self,
         data: dict,
         expires_delta: timedelta | None = None,
-        secret: str | None = None,
+        secret: str = "",
         algorithm: str | None = None,
     ) -> str:
         if not secret:
@@ -51,10 +51,6 @@ class JwtClient:
     def get_unverified_header(self, jwt_token: str) -> dict:
         jwt_header = jwt.get_unverified_header(jwt_token)
         return jwt_header
-
-    def decode_non_aud_token(self, jwt_token: str) -> dict:
-        payload = jwt.decode(jwt_token, options={"verify_aud": False})
-        return payload
 
     def is_token_expired(self, jwt_token: str) -> bool:
         payload = self.decode_token(jwt_token)
