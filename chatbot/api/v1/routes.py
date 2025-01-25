@@ -13,7 +13,7 @@ api_router = APIRouter()
 
 
 @api_router.post(
-    "/google/login",
+    "/auth/google/login",
     response_model=GoogleLoginResponseSchema,
     responses={400: {"model": ErrorSchema}, 500: {"model": ErrorSchema}},
 )

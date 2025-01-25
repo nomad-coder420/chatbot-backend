@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
 
-from chatbot.api.v1.auth.routes import api_router as auth_router
+from chatbot.api.v1.routes import api_router as app_router
 
 router = APIRouter()
 
-router.include_router(auth_router, prefix="/auth", tags=["auth"])
+router.include_router(app_router)
