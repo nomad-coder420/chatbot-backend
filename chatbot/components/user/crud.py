@@ -16,5 +16,9 @@ class UserCrud:
         return user_obj
 
     def get_user_obj(self, user_id: UUID) -> User:
-        user_obj = self.db.query(User).filter(User.user_id == user_id).first()
+        user_obj = (
+            self.db.query(User)
+            .filter(User.user_id == user_id, User.is_deleted == False)
+            .first()
+        )
         return user_obj

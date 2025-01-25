@@ -1,5 +1,5 @@
 from uuid import uuid4, UUID as UUIDType
-from sqlalchemy import UUID, String
+from sqlalchemy import UUID, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from chatbot.core.models import BaseModel
@@ -14,6 +14,7 @@ class User(BaseModel):
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     authentication: Mapped["Authentication"] = relationship(
         "Authentication", back_populates="user", uselist=False
