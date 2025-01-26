@@ -1,7 +1,10 @@
 import json
 from uuid import UUID
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
+from chatbot.database.session import AsyncSessionLocal
+from chatbot.components.chat.async_crud import AsyncChatCrud
 from chatbot.components.chat.crud import ChatCrud
 from chatbot.components.chat.enums import QueryResponseStatus
 from chatbot.components.user.models import User
@@ -15,45 +18,66 @@ class GetResponseFlow:
 
         self.chat_controller = ChatCrud(self.user, self.db)
 
-    async def get_llm_response(
-        self, query, query_id, response_id, chat_history, response_obj
-    ):
-        llm_agent = LlmAgent().get_agent()
-        initial_state = {
-            "query": query,
-            "query_id": query_id,
-            "response_id": response_id,
-            "chat_history": chat_history,
-        }
+    async def get_llm_response(self, query, query_id, response_id, chat_history):
+        async with AsyncSessionLocal() as async_db:
+            async_chat_controller = AsyncChatCrud(async_db)
 
-        self.chat_controller.update_response_status(
-            response_obj, QueryResponseStatus.IN_PROGRESS
-        )
+            try:
+                response_obj = await async_chat_controller.get_response_obj(response_id)
 
-        response = ""
-        async for chunk in llm_agent.astream_events(
-            initial_state,
-            version="v2",
-        ):
-            event = chunk["event"]
-            name = chunk["name"]
+                llm_agent = LlmAgent().get_agent()
+                initial_state = {
+                    "query": query,
+                    "query_id": query_id,
+                    "response_id": response_id,
+                    "chat_history": chat_history,
+                }
 
-            if event == "on_llm_stream":
-                content = chunk["data"]["chunk"].text
-                response += content
+                self.chat_controller.update_response_status(
+                    response_obj, QueryResponseStatus.IN_PROGRESS
+                )
 
-                yield f"data: {json.dumps(content)}\n\n"
+                response = ""
+                async for chunk in llm_agent.astream_events(
+                    initial_state,
+                    version="v2",
+                ):
+                    event = chunk["event"]
+                    name = chunk["name"]
 
-            elif event == "on_chain_end":
-                if name == "LangGraph":
-                    yield "data: <end>\n\n"
+                    if event == "on_llm_stream":
+                        content = chunk["data"]["chunk"].text
+                        response += content
 
-        self.chat_controller.update_query_response(response_obj, response)
-        self.chat_controller.update_response_status(
-            response_obj, QueryResponseStatus.SUCCEEDED
-        )
+                        yield f"data: {json.dumps(content)}\n\n"
+
+                    elif event == "on_chain_end":
+                        if name == "LangGraph":
+                            yield "data: <end>\n\n"
+
+                await async_chat_controller.update_query_response(
+                    response_obj, response
+                )
+                await async_chat_controller.update_response_status(
+                    response_obj, QueryResponseStatus.SUCCEEDED
+                )
+            except SQLAlchemyError as e:
+                await async_db.rollback()
+
+                try:
+                    await async_chat_controller.update_response_failed(response_obj, e)
+                except Exception as err:
+                    print("Error updating response status:", err)
+
+                raise e
+
+            except Exception as e:
+                await async_chat_controller.update_response_failed(response_obj, e)
+                raise e
 
     def execute_flow(self, query_id: UUID):
+        response_obj = None
+
         try:
             latest_query_obj = self.chat_controller.get_latest_query()
 
@@ -76,7 +100,6 @@ class GetResponseFlow:
                 latest_query_obj.query_id,
                 response_obj.response_id,
                 chat_history,
-                response_obj,
             )
 
             headers = {"response_id": str(response_obj.response_id)}
@@ -84,4 +107,8 @@ class GetResponseFlow:
             return response, headers
         except Exception as e:
             print(f"Error executing Get Response Flow: {e}")
+
+            if response_obj:
+                self.chat_controller.update_response_failed(response_obj, e)
+
             raise e

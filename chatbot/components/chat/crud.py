@@ -77,11 +77,11 @@ class ChatCrud:
 
         return response_obj
 
-    def update_query_response(self, response_obj: QueryResponse, response: str):
-        print("update_query_responseeeee")
+    def update_response_failed(self, response_obj: QueryResponse, error: Exception):
         response_obj = self.db.merge(response_obj)
 
-        response_obj.response += response
+        response_obj.status = QueryResponseStatus.FAILED
+        response_obj.failure_reason = {"error": str(error)}
 
         self.db.flush()
         self.db.refresh(response_obj)
