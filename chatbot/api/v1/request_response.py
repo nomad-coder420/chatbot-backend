@@ -34,3 +34,11 @@ class GetChatHistoryRequestSchema(BaseModel):
 class GetChatHistoryResponseSchema(BaseModel):
     chat_history: list
     is_last_page: bool
+
+
+class DeletrQueryRequestSchema(BaseModel):
+    query_id: UUID
+
+
+class DeletrQueryResponseSchema(BaseModel):
+    pass

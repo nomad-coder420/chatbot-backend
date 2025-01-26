@@ -8,5 +8,5 @@ class ChatSchema(TypedDict):
     query: str
     response: str
     query_id: UUID
-    response_id: UUID
+    response_id: UUID | None
     status: QueryResponseStatus

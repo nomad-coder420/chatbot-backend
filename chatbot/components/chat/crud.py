@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 from sqlalchemy.orm import Session
 
@@ -122,10 +123,10 @@ class ChatCrud:
 
         response_dict = {response.query_id: response for response in latest_responses}
 
-        chat_history = []
+        chat_history: list[ChatSchema] = []
 
         for query in queries:
-            response_text = None
+            response_text = ""
             response_id = None
             status = QueryResponseStatus.FAILED
 
@@ -146,3 +147,16 @@ class ChatCrud:
             )
 
         return chat_history, is_last_page
+
+    def delete_user_queries(self, query_id_gte: int):
+        self.db.query(UserQuery).filter(
+            UserQuery.id >= query_id_gte, UserQuery.is_deleted == False
+        ).update(
+            {
+                UserQuery.is_deleted: True,
+                UserQuery.deleted_at: datetime.now(timezone.utc),
+            },
+            synchronize_session="fetch",
+        )
+
+        self.db.commit()
