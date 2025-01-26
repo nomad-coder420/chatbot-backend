@@ -24,6 +24,8 @@ langchain-aws = "^0.2.11"
 boto3 = "^1.36.6"
 asyncpg = "^0.30.0"
 greenlet = "^3.1.1"
+langchain-google-vertexai = "^2.0.12"
+google-cloud-aiplatform = "^1.78.0"
 
 
 [build-system]
