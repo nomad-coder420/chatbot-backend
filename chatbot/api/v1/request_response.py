@@ -25,8 +25,6 @@ class AskQueryRequestSchema(BaseModel):
 
 class AskQueryResponseSchema(BaseModel):
     query_id: UUID
-    response_id: UUID
-    status: QueryResponseStatus
 
 
 class GetChatHistoryRequestSchema(BaseModel):

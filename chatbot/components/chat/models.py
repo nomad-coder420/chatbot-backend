@@ -30,6 +30,7 @@ class UserQuery(BaseModel):
     query: Mapped[str] = mapped_column(String, nullable=False)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     deleted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    meta: Mapped[dict] = mapped_column(JSON, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="queries")
     responses: Mapped["QueryResponse"] = relationship(

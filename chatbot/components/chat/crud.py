@@ -20,6 +20,32 @@ class ChatCrud:
 
         return user_query
 
+    def get_user_query(self, query_id: UUID) -> UserQuery | None:
+        user_query = (
+            self.db.query(UserQuery)
+            .filter(
+                UserQuery.user_id == self.user.id,
+                UserQuery.query_id == query_id,
+                UserQuery.is_deleted == False,
+            )
+            .first()
+        )
+
+        return user_query
+
+    def get_latest_query(self) -> UserQuery | None:
+        user_query = (
+            self.db.query(UserQuery)
+            .filter(
+                UserQuery.user_id == self.user.id,
+                UserQuery.is_deleted == False,
+            )
+            .order_by(UserQuery.created_at.desc())
+            .first()
+        )
+
+        return user_query
+
     def create_query_response(self, query_id: int, response: str) -> UserQuery:
         query_response = QueryResponse(query_id=query_id, response=response)
 
@@ -28,6 +54,39 @@ class ChatCrud:
         self.db.refresh(query_response)
 
         return query_response
+
+    def get_query_response(self, query_obj: UserQuery) -> QueryResponse | None:
+        query_response = (
+            self.db.query(QueryResponse)
+            .filter(QueryResponse.query_id == query_obj.id)
+            .order_by(QueryResponse.created_at.desc())
+            .first()
+        )
+
+        return query_response
+
+    def update_response_status(
+        self, response_obj: QueryResponse, status: QueryResponseStatus
+    ):
+        response_obj = self.db.merge(response_obj)
+
+        response_obj.status = status
+
+        self.db.flush()
+        self.db.refresh(response_obj)
+
+        return response_obj
+
+    def update_query_response(self, response_obj: QueryResponse, response: str):
+        print("update_query_responseeeee")
+        response_obj = self.db.merge(response_obj)
+
+        response_obj.response += response
+
+        self.db.flush()
+        self.db.refresh(response_obj)
+
+        return response_obj
 
     def get_chat_history(
         self,
