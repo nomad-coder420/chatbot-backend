@@ -3,6 +3,7 @@ from threading import Lock
 from langgraph.graph import StateGraph, END
 
 from chatbot.llm_agent.constants import NodeName
+from chatbot.llm_agent.nodes.answer_query import AnswerQueryNode
 from chatbot.llm_agent.nodes.contextualize_query import ContextualizeQueryNode
 from chatbot.llm_agent.state import AgentState
 
@@ -50,12 +51,16 @@ class LlmAgent:
         graph.add_node(
             NodeName.CONTEXTUALIZE_QUERY.value, ContextualizeQueryNode().execute
         )
+        graph.add_node(NodeName.ANSWER_QUERY.value, AnswerQueryNode().execute)
 
         graph.set_entry_point(NodeName.CONTEXTUALIZE_QUERY.value)
-        graph.add_edge(NodeName.CONTEXTUALIZE_QUERY.value, END)
+        graph.add_edge(NodeName.CONTEXTUALIZE_QUERY.value, NodeName.ANSWER_QUERY.value)
+        graph.add_edge(NodeName.ANSWER_QUERY.value, END)
 
         agent = graph.compile()
         curr_dir = os.getcwd()
-        agent.get_graph().draw_mermaid_png(output_file_path=f"{curr_dir}/chatbot/llm_agent/agent.png")
+        agent.get_graph().draw_mermaid_png(
+            output_file_path=f"{curr_dir}/chatbot/llm_agent/agent.png"
+        )
 
         return agent

@@ -1,14 +1,15 @@
-import json
 from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
+from chatbot.components.chat.schemas import ChatSchema
 from chatbot.database.session import AsyncSessionLocal
 from chatbot.components.chat.async_crud import AsyncChatCrud
 from chatbot.components.chat.crud import ChatCrud
 from chatbot.components.chat.enums import QueryResponseStatus
 from chatbot.components.user.models import User
 from chatbot.llm_agent.agent import LlmAgent
+from chatbot.llm_agent.controller import LlmAgentController
 
 
 class GetResponseFlow:
@@ -17,48 +18,31 @@ class GetResponseFlow:
         self.db = db
 
         self.chat_controller = ChatCrud(self.user, self.db)
+        self.llm_agent_controller = LlmAgentController()
 
-    async def get_llm_response(self, query, query_id, response_id, chat_history):
+    async def get_llm_response(
+        self,
+        query: str,
+        query_id: UUID,
+        response_id: UUID,
+        chat_history: list[ChatSchema],
+    ):
         async with AsyncSessionLocal() as async_db:
             async_chat_controller = AsyncChatCrud(async_db)
 
             try:
                 response_obj = await async_chat_controller.get_response_obj(response_id)
 
-                llm_agent = LlmAgent().get_agent()
-                initial_state = {
-                    "query": query,
-                    "query_id": query_id,
-                    "response_id": response_id,
-                    "chat_history": chat_history,
-                }
-
                 self.chat_controller.update_response_status(
                     response_obj, QueryResponseStatus.IN_PROGRESS
                 )
 
                 response = ""
-                async for chunk in llm_agent.astream_events(
-                    initial_state,
-                    version="v2",
+                async for chunk in self.llm_agent_controller.process_query(
+                    query, query_id, response_id, chat_history
                 ):
-                    event = chunk["event"]
-                    name = chunk["name"]
-
-                    if event == "on_llm_end":
-                        output = chunk["data"]["output"]
-                        generations = output.get("generations") or []
-
-                        if generations and generations[0]:
-                            response_generations = generations[0]
-                            for generation in response_generations:
-                                content = generation.get("text", "")
-                                response += content
-                                yield content
-
-                    elif event == "on_chain_end":
-                        if name == "LangGraph":
-                            yield "<end>"
+                    response += chunk
+                    yield chunk
 
                 await async_chat_controller.update_query_response(
                     response_obj, response

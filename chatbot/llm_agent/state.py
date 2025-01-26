@@ -10,5 +10,5 @@ class AgentState(TypedDict):
     query_id: UUID
     response_id: UUID
     chat_history: list[ChatSchema]
-    refined_query: str
+    contextualised_query: str
     next_prompt_options: list[str]
