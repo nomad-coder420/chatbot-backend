@@ -81,7 +81,7 @@ class GetResponseFlow:
             )
 
             chat_history, _ = self.chat_controller.get_chat_history(
-                last_query_id=latest_query_obj.query_id
+                last_query_id=latest_query_obj.id
             )
 
             response = self.get_llm_response(

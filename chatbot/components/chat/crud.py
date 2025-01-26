@@ -92,7 +92,7 @@ class ChatCrud:
     def get_chat_history(
         self,
         count: int | None = None,
-        last_query_id: UUID | None = None,
+        last_query_id: int | None = None,
     ) -> tuple[list[ChatSchema], bool]:
         if not count:
             count = 10
@@ -103,7 +103,7 @@ class ChatCrud:
         )
 
         if last_query_id:
-            query = query.filter(UserQuery.query_id < last_query_id)
+            query = query.filter(UserQuery.id < last_query_id)
 
         queries = query.order_by(UserQuery.id.desc()).limit(count + 1).all()
         is_last_page = len(queries) <= count
