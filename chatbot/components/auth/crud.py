@@ -10,7 +10,11 @@ class AuthCrud:
     def get_auth_obj(self, google_user_id: str) -> Authentication | None:
         return (
             self.db.query(Authentication)
-            .filter(Authentication.google_user_id == google_user_id)
+            .join(User, Authentication.user_id == User.id)
+            .filter(
+                Authentication.google_user_id == google_user_id,
+                User.is_deleted == False,
+            )
             .first()
         )
 

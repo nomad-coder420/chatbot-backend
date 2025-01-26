@@ -45,15 +45,20 @@ class GetResponseFlow:
                     event = chunk["event"]
                     name = chunk["name"]
 
-                    if event == "on_llm_stream":
-                        content = chunk["data"]["chunk"].text
-                        response += content
+                    if event == "on_llm_end":
+                        output = chunk["data"]["output"]
+                        generations = output.get("generations") or []
 
-                        yield f"data: {json.dumps(content)}\n\n"
+                        if generations and generations[0]:
+                            response_generations = generations[0]
+                            for generation in response_generations:
+                                content = generation.get("text", "")
+                                response += content
+                                yield content
 
                     elif event == "on_chain_end":
                         if name == "LangGraph":
-                            yield "data: <end>\n\n"
+                            yield "<end>"
 
                 await async_chat_controller.update_query_response(
                     response_obj, response
