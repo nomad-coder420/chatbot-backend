@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from chatbot.components.chat.enums import QueryResponseStatus
 from chatbot.components.chat.models import QueryResponse, UserQuery
+from chatbot.components.chat.schemas import ChatSchema
 from chatbot.components.user.models import User
 
 
@@ -92,7 +93,7 @@ class ChatCrud:
         self,
         count: int | None = None,
         last_query_id: UUID | None = None,
-    ) -> tuple[list[dict], bool]:
+    ) -> tuple[list[ChatSchema], bool]:
         if not count:
             count = 10
 

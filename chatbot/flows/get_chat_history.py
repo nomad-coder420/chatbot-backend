@@ -21,4 +21,4 @@ class GetChatHistoryFlow:
             return {"chat_history": chat_history, "is_last_page": is_last_page}
         except Exception as e:
             print(f"Error fetching chat history: {e}")
-            return []
+            return {}
