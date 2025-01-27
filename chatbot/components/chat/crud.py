@@ -150,7 +150,9 @@ class ChatCrud:
 
     def delete_user_queries(self, query_id_gte: int):
         self.db.query(UserQuery).filter(
-            UserQuery.id >= query_id_gte, UserQuery.is_deleted == False
+            UserQuery.user_id == self.user.id,
+            UserQuery.id >= query_id_gte,
+            UserQuery.is_deleted == False,
         ).update(
             {
                 UserQuery.is_deleted: True,
