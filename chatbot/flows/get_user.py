@@ -1,5 +1,6 @@
 from uuid import UUID
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 
 from chatbot.components.user.crud import UserCrud
 
@@ -14,7 +15,7 @@ class GetUserFlow:
             user_obj = self.user_controller.get_user_obj(user_id)
 
             if not user_obj:
-                raise Exception("User not found")
+                raise HTTPException(status_code=498, detail="Invalid user id")
 
             return user_obj
         except Exception as e:
